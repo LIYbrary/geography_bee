@@ -2,7 +2,7 @@ const $ = id => document.getElementById(id);
 const KEY = 'geobee-v1';
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) } catch {}
-S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }, S || {});
+S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', count: 10, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }, S || {});
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
 
 // Flatten bank into questions with stable ids.
@@ -20,20 +20,25 @@ function renderHome() {
   $('cats').innerHTML = Object.entries(BANK).map(([k, c]) => `<button data-c="${k}" aria-pressed="${S.cats.includes(k)}" class="${S.cats.includes(k) ? 'sel' : ''}">${c.icon} ${c.name}</button>`).join('');
   document.querySelectorAll('#levels button').forEach(b => { const on = +b.dataset.l === S.level; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
   document.querySelectorAll('#styles button').forEach(b => { const on = b.dataset.s === S.style; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
+  document.querySelectorAll('#counts button').forEach(b => { const on = +b.dataset.n === S.count; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
+  const avail = pool().length, n = S.count ? Math.min(S.count, avail) : avail;
+  $('startPractice').textContent = `Start practice (${n} question${n === 1 ? '' : 's'})`;
+  $('startBee').textContent = `Start bee round (${n})`;
   const m = Object.keys(S.missed).filter(id => byId[id]);
   $('missCount').textContent = m.length ? `${m.length} question${m.length > 1 ? 's' : ''} to review.` : 'Nothing to review yet — great!';
   $('missList').innerHTML = m.map(id => `<li>${byId[id].plain} — <b>${byId[id].a}</b></li>`).join('');
   const pct = S.answered ? Math.round(100 * S.correct / S.answered) : 0;
-  $('stats').innerHTML = `Answered: <b>${S.answered}</b> · Correct: <b>${S.correct}</b> (${pct}%)<br>Best streak: <b>${S.best}</b> · Bee rounds: <b>${S.bees}</b> · Best bee score: <b>${S.bestBee}/10</b>`;
+  $('stats').innerHTML = `Answered: <b>${S.answered}</b> · Correct: <b>${S.correct}</b> (${pct}%)<br>Best streak: <b>${S.best}</b> · Bee rounds: <b>${S.bees}</b> · Best bee score: <b>${S.bestBee}%</b>`;
   $('stStreak').textContent = '🔥 ' + S.streak; $('stBest').textContent = '🏆 ' + S.best;
   $('stStreak').title = 'Current streak'; $('stBest').title = 'Best streak';
 }
 $('cats').onclick = e => { const b = e.target.closest('button'); if (!b) return; const k = b.dataset.c;
   S.cats = S.cats.includes(k) ? S.cats.filter(x => x !== k) : [...S.cats, k]; if (!S.cats.length) S.cats = [k]; save(); renderHome() };
 $('levels').onclick = e => { const b = e.target.closest('button'); if (b) { S.level = +b.dataset.l; save(); renderHome() } };
+$('counts').onclick = e => { const b = e.target.closest('button'); if (b) { S.count = +b.dataset.n; save(); renderHome() } };
 $('styles').onclick = e => { const b = e.target.closest('button'); if (b) { S.style = b.dataset.s; save(); renderHome() } };
 $('showMissed').onclick = () => $('missList').classList.toggle('hidden');
-$('reset').onclick = () => { if (confirm('Reset all scores, streaks and missed questions?')) { const { cats, level, style } = S; S = { cats, level, style, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }; save(); renderHome() } };
+$('reset').onclick = () => { if (confirm('Reset all scores, streaks and missed questions?')) { const { cats, level, style, count } = S; S = { cats, level, style, count, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }; save(); renderHome() } };
 
 // Level N includes questions up to N, favouring level N.
 function pool() {
@@ -45,11 +50,11 @@ function pool() {
 let R, timerId;
 function start(mode, qs) {
   if (!qs.length) { alert('No questions here yet.'); return }
-  R = { mode, qs: shuffle(qs.slice(0, 10)), i: 0, score: 0, miss: [], style: mode === 'bee' ? 'type' : S.style };
+  R = { mode, qs: shuffle(S.count ? qs.slice(0, S.count) : qs), i: 0, score: 0, miss: [], style: mode === 'bee' ? 'type' : S.style };
   show('quiz'); ask();
 }
-$('startPractice').onclick = () => start('practice', pool().slice(0, 10));
-$('startBee').onclick = () => start('bee', pool().slice(0, 10));
+$('startPractice').onclick = () => start('practice', pool());
+$('startBee').onclick = () => start('bee', pool());
 $('startReview').onclick = () => start('review', shuffle(Object.keys(S.missed).filter(id => byId[id]).map(id => byId[id])));
 
 function ask() {
@@ -98,7 +103,7 @@ $('next').onclick = () => { if (++R.i < R.qs.length) ask(); else finish() };
 $('quit').onclick = () => { clearInterval(timerId); show('home') };
 
 function finish() {
-  if (R.mode === 'bee') { S.bees++; S.bestBee = Math.max(S.bestBee, R.score); save() }
+  if (R.mode === 'bee') { S.bees++; S.bestBee = Math.max(S.bestBee, Math.round(100 * R.score / R.qs.length)); save() }
   const n = R.qs.length, pct = R.score / n;
   $('doneTitle').textContent = (pct === 1 ? '🏆 Perfect!' : pct >= .7 ? '🌟 Great job!' : '💪 Keep practising!') + ` ${R.score}/${n}`;
   $('doneText').textContent = R.miss.length ? 'Questions to review:' : 'No misses this round!';
