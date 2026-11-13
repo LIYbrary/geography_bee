@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geography Bee</title>
+<meta name="description" content="Practise for a geography bee: capitals, flags, states, physical geography and landmarks. Works offline.">
+<meta name="theme-color" content="#1b6b5a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--bg:#f3f8f6;--card:#fff;--ink:#14302a;--muted:#55706a;--brand:#1b6b5a;--brand2:#e9a23b;--ok:#2e8b3e;--bad:#c0392b;--line:#d5e3de}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1c19;--card:#182b26;--ink:#e8f3ef;--muted:#9bb8b0;--brand:#4fc3a1;--brand2:#f2b552;--ok:#5fd17a;--bad:#ff7b6b;--line:#2a443d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.6rem;margin:.2em 0}
+h2{font-size:1.2rem;margin:.6em 0 .4em}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+button,.btn{font:inherit;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;min-height:48px;cursor:pointer;text-align:center}
+button:focus-visible,input:focus-visible{outline:3px solid var(--brand2);outline-offset:2px}
+button.sel{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,var(--card))}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700;width:100%}
+@media (prefers-color-scheme:dark){button.primary{color:#0f1c19}}
+.seg{display:flex;gap:8px;flex-wrap:wrap}.seg button{flex:1}
+.q{font-size:1.25rem;font-weight:600;margin:4px 0 12px}
+.flag{display:block;font-size:4.5rem;line-height:1.2;text-align:center}
+.choices{display:grid;gap:10px}
+.choices button{text-align:left}
+button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card))}
+button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--card))}
+input[type=text]{font:inherit;width:100%;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px}
+.fb{min-height:1.6em;font-weight:600;margin:10px 0}
+.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 12px}
+.bar i{display:block;height:100%;background:var(--brand2);transition:width .25s linear}
+.row{display:flex;justify-content:space-between;color:var(--muted);font-size:.95rem}
+ul.miss{padding-left:18px}ul.miss li{margin:6px 0}
+.muted{color:var(--muted)}
+.hidden{display:none}
+footer{text-align:center;font-size:.85rem;color:var(--muted);margin:24px 0}
+footer a{color:var(--brand)}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><h1>🐝 Geography Bee</h1><div class="chips"><span class="chip" id="stStreak">🔥 0</span><span class="chip" id="stBest">🏆 0</span></div></div>
+
+  <section id="home">
+    <div class="card">
+      <h2>1. Pick topics</h2>
+      <div class="grid" id="cats"></div>
+      <h2>2. Difficulty</h2>
+      <div class="seg" id="levels"><button data-l="1">Easy</button><button data-l="2">Medium</button><button data-l="3">Hard</button></div>
+      <h2>3. Answer style</h2>
+      <div class="seg" id="styles"><button data-s="mc">Multiple choice</button><button data-s="type">Type it in</button></div>
+      <p></p>
+      <button class="primary" id="startPractice">Start practice (10 questions)</button>
+    </div>
+    <div class="card">
+      <h2>⏱️ Bee round</h2>
+      <p class="muted">Contest style: 10 mixed questions from your chosen topics and level, type your answer, 20 seconds each.</p>
+      <button class="primary" id="startBee">Start bee round</button>
+    </div>
+    <div class="card">
+      <h2>📝 Review missed questions</h2>
+      <p class="muted" id="missCount"></p>
+      <div class="seg"><button id="startReview">Practise missed</button><button id="showMissed">See list</button></div>
+      <ul class="miss hidden" id="missList"></ul>
+    </div>
+    <div class="card">
+      <h2>📊 My stats</h2>
+      <div id="stats" class="muted"></div>
+      <p></p><button id="reset">Reset all progress</button>
+    </div>
+  </section>
+
+  <section id="quiz" class="hidden">
+    <div class="card">
+      <div class="row"><span id="qNum"></span><span id="qScore"></span></div>
+      <div class="bar" id="timerBar"><i id="timer"></i></div>
+      <div class="q" id="qText" aria-live="polite"></div>
+      <div class="choices" id="choices"></div>
+      <form id="typeForm" class="hidden" autocomplete="off">
+        <label for="typeIn" class="muted">Your answer</label>
+        <input type="text" id="typeIn" autocapitalize="words" spellcheck="false">
+        <button class="primary" type="submit">Check</button>
+      </form>
+      <div class="fb" id="fb" role="status"></div>
+      <button class="primary hidden" id="next">Next ➜</button>
+      <p></p><button id="quit">Quit to menu</button>
+    </div>
+  </section>
+
+  <section id="done" class="hidden">
+    <div class="card">
+      <h2 id="doneTitle"></h2>
+      <p id="doneText"></p>
+      <ul class="miss" id="doneMiss"></ul>
+      <button class="primary" id="again">Back to menu</button>
+    </div>
+  </section>
+
+  <footer>Free, no ads, no tracking — progress stays on this device. <a href="privacy.html">Privacy</a></footer>
+</main>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
