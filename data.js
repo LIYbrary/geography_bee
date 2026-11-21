@@ -3,7 +3,7 @@
 const BANK = {
   capitals: { name: 'World capitals', icon: '🏛️', ask: c => `What is the capital of ${c}?`,
     items: COUNTRIES.map(([c, , cap, lv, alt]) => [c, cap, lv, alt]) },
-  states: { name: 'US state capitals', icon: '🇺🇸', ask: s => `What is the capital of ${s}?`, items: [
+  states: { name: 'US state capitals', icon: '🗽', ask: s => `What is the capital of ${s}?`, items: [
     ['Texas','Austin',1],['California','Sacramento',1],['New York','Albany',2],['Florida','Tallahassee',2],['Georgia','Atlanta',1],
     ['Massachusetts','Boston',1],['Colorado','Denver',1],['Arizona','Phoenix',1],['Hawaii','Honolulu',1],['Tennessee','Nashville',1],
     ['Ohio','Columbus',1],['Indiana','Indianapolis',1],['Utah','Salt Lake City',1],['Virginia','Richmond',2],['Illinois','Springfield',2],
