@@ -3,12 +3,14 @@ const KEY = 'geobee-v1';
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) } catch {}
 S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', count: 10, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }, S || {});
+// v2 rebuilt the capitals and flags banks, so old missed ids there point at different questions; new categories start on.
+if (!S.v2) { for (const id in S.missed) if (/^(capitals|flags)/.test(id)) delete S.missed[id]; S.cats = [...new Set([...S.cats, 'waters', 'borders'])]; S.v2 = 1 }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
 
 // Flatten bank into questions with stable ids.
 const ALL = [];
 for (const [cat, c] of Object.entries(BANK)) c.items.forEach(([p, a, lv, alt], i) =>
-  ALL.push({ id: cat + i, cat, text: c.ask ? c.ask(p) : p, plain: cat === 'flags' ? 'Flag ' + p : (c.ask ? c.ask(p) : p), a, lv, alt: alt || [] }));
+  ALL.push({ id: cat + i, cat, text: c.ask ? c.ask(p) : p, plain: c.ask ? c.ask(p) : p, a, lv, alt: alt || [] }));
 const byId = Object.fromEntries(ALL.map(q => [q.id, q]));
 
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]] } return a };
@@ -80,6 +82,18 @@ function ask() {
   }
 }
 $('choices').onclick = e => { const b = e.target.closest('button'); if (b && !R.done) answer(b.textContent, b) };
+// Speak the answer instead of typing it (browsers with the Web Speech API).
+const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (Rec) {
+  $('mic').classList.remove('hidden');
+  $('mic').onclick = () => {
+    const r = new Rec(); r.lang = 'en-US'; r.interimResults = true;
+    r.onresult = e => { $('typeIn').value = [...e.results].map(x => x[0].transcript).join('').replace(/[.?!]$/, '') };
+    r.onend = () => { $('mic').classList.remove('on'); $('typeIn').focus() };
+    r.onerror = e => { if (e.error === 'not-allowed') $('fb').textContent = 'Allow microphone access to answer by voice.' };
+    $('mic').classList.add('on'); r.start();
+  };
+}
 $('typeForm').onsubmit = e => { e.preventDefault(); if (!R.done) answer($('typeIn').value) };
 
 function answer(given, btn) {

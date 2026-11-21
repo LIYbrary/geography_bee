@@ -29,7 +29,9 @@ button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font
 @media (prefers-color-scheme:dark){button.primary{color:#0f1c19}}
 .seg{display:flex;gap:8px;flex-wrap:wrap}.seg button{flex:1}
 .q{font-size:1.25rem;font-weight:600;margin:4px 0 12px}
-.flag{display:block;font-size:4.5rem;line-height:1.2;text-align:center}
+.flag{display:block;height:7rem;max-width:100%;margin:.6rem auto 0;border:1px solid #ccc;border-radius:4px}
+li .flag{display:inline;height:1.2em;margin:0 0 0 .3em;vertical-align:middle}
+.typerow{display:flex;gap:.5rem}.typerow input{flex:1;min-width:0}#mic{font-size:1.3rem;padding:0 .8rem;border-radius:8px;border:1px solid #ccc;background:none;cursor:pointer}#mic.on{background:#e53935;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.6}}
 .choices{display:grid;gap:10px}
 .choices button{text-align:left}
 button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card))}
@@ -90,7 +92,7 @@ footer a{color:var(--brand)}
       <div class="choices" id="choices"></div>
       <form id="typeForm" class="hidden" autocomplete="off">
         <label for="typeIn" class="muted">Your answer</label>
-        <input type="text" id="typeIn" autocapitalize="words" spellcheck="false">
+        <div class="typerow"><input type="text" id="typeIn" autocapitalize="words" spellcheck="false"><button type="button" id="mic" class="hidden" aria-label="Answer by voice" title="Answer by voice">🎤</button></div>
         <button class="primary" type="submit">Check</button>
       </form>
       <div class="fb" id="fb" role="status"></div>
@@ -110,6 +112,7 @@ footer a{color:var(--brand)}
 
   <footer>Free, no ads, no tracking — progress stays on this device. <a href="privacy.html">Privacy</a></footer>
 </main>
+<script src="countries.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
