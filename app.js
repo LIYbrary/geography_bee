@@ -5,6 +5,7 @@ try { S = JSON.parse(localStorage.getItem(KEY)) } catch {}
 S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', count: 10, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }, S || {});
 // v2 rebuilt the capitals and flags banks, so old missed ids there point at different questions; new categories start on.
 if (!S.v2) { for (const id in S.missed) if (/^(capitals|flags)/.test(id)) delete S.missed[id]; S.cats = [...new Set([...S.cats, 'waters', 'borders'])]; S.v2 = 1 }
+if (!S.v3) { S.cats = [...new Set([...S.cats, 'africa', 'asia', 'europe', 'oceania', 'latam', 'usca', 'culture', 'terms'])]; S.v3 = 1 }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch {} };
 
 // Flatten bank into questions with stable ids.
@@ -15,6 +16,10 @@ const byId = Object.fromEntries(ALL.map(q => [q.id, q]));
 
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]] } return a };
 const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^(the|mount|mt\.?|lake|river)\s+/, '').replace(/\b(river|ocean|desert|sea|mountains?)\b/g, '').replace(/[^a-z0-9]/g, '');
+// Rough answer type, so multiple-choice options are all countries, all cities, all rivers...
+const COUNTRY_SET = new Set(COUNTRIES.map(c => c[0])), CITY_SET = new Set(COUNTRIES.map(c => c[2]));
+const kind = a => COUNTRY_SET.has(a) ? 'country' : CITY_SET.has(a) ? 'city' : /(Sea|Ocean|Gulf|Bay|Strait|Channel|Canal|Passage)|^Lake /.test(a) ? 'water'
+  : /(Island|Peninsula|Reef|Gap|Mountains?)/.test(a) ? 'land' : /\s/.test(a) ? 'multi' : 'word';
 const isRight = (q, s) => [q.a, ...q.alt].some(x => norm(x) === norm(s) && norm(s) !== '');
 
 // ---- Home ----
@@ -69,7 +74,9 @@ function ask() {
   const mc = R.style === 'mc';
   $('choices').classList.toggle('hidden', !mc); $('typeForm').classList.toggle('hidden', mc);
   if (mc) {
-    const others = shuffle([...new Set(ALL.filter(x => x.cat === q.cat && norm(x.a) !== norm(q.a)).map(x => x.a))]).slice(0, 3);
+    const same = [...new Set(ALL.filter(x => x.cat === q.cat && norm(x.a) !== norm(q.a)).map(x => x.a))];
+    const like = shuffle(same.filter(a => kind(a) === kind(q.a))), rest = shuffle(same.filter(a => kind(a) !== kind(q.a)));
+    const others = [...like, ...rest].slice(0, 3);
     $('choices').innerHTML = shuffle([q.a, ...others]).map(c => `<button type="button">${c}</button>`).join('');
     $('choices').querySelector('button').focus();
   } else { $('typeIn').value = ''; $('typeIn').focus() }
