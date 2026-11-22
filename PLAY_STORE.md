@@ -10,4 +10,4 @@ The app is a PWA at https://liybrary.github.io/geography_bee/ and is wrapped as 
    - Data safety: no data collected or shared.
    - Target audience: pick the age groups; this puts it under the Families policy (no ads, no analytics, nothing collected — already true).
    - Content rating questionnaire, store listing text, screenshots, 512px icon (`icons/icon-512.png`).
-5. When changing app files, bump `CACHE` in `sw.js` so installed copies update.
+5. When changing app files, bump `CACHE` in `sw.js` so installed copies update. If `app.js` changed, also bump its `?v=` in both `index.html` and `sw.js`, so a new page never runs with an old cached script.
