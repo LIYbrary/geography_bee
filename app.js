@@ -24,18 +24,23 @@ const isRight = (q, s) => [q.a, ...q.alt].some(x => norm(x) === norm(s) && norm(
 
 // ---- Home ----
 function renderHome() {
-  $('cats').innerHTML = Object.entries(BANK).map(([k, c]) => `<button data-c="${k}" aria-pressed="${S.cats.includes(k)}" class="${S.cats.includes(k) ? 'sel' : ''}">${c.icon} ${c.name}</button>`).join('');
+  // Update tiles in place once built, so keyboard focus and transitions survive a click.
+  if (!$('cats').children.length) $('cats').innerHTML = Object.entries(BANK).map(([k, c], i) => `<button class="topic" data-c="${k}" style="--h:${i * 67 % 360}"><i aria-hidden="true">${c.icon}</i><b>${c.name}</b><small>${c.items.length} questions</small></button>`).join('');
+  for (const b of $('cats').children) { const on = S.cats.includes(b.dataset.c); b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) }
   document.querySelectorAll('#levels button').forEach(b => { const on = +b.dataset.l === S.level; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
   document.querySelectorAll('#styles button').forEach(b => { const on = b.dataset.s === S.style; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
   document.querySelectorAll('#counts button').forEach(b => { const on = +b.dataset.n === S.count; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on) });
   const avail = pool().length, n = S.count ? Math.min(S.count, avail) : avail;
   $('startPractice').textContent = `Start practice (${n} question${n === 1 ? '' : 's'})`;
-  $('startBee').textContent = `Start bee round (${n})`;
+  const topics = Object.keys(BANK).filter(k => S.cats.includes(k)).length;
+  $('summary').textContent = `${topics} topic${topics === 1 ? '' : 's'} · ${['Easy', 'Medium', 'Hard'][S.level - 1]} · ${n} question${n === 1 ? '' : 's'}. Bee rounds are typed, 20 seconds each.`;
   const m = Object.keys(S.missed).filter(id => byId[id]);
   $('missCount').textContent = m.length ? `${m.length} question${m.length > 1 ? 's' : ''} to review.` : 'Nothing to review yet — great!';
+  $('missActions').classList.toggle('hidden', !m.length);
   $('missList').innerHTML = m.map(id => `<li>${byId[id].plain} — <b>${byId[id].a}</b></li>`).join('');
   const pct = S.answered ? Math.round(100 * S.correct / S.answered) : 0;
-  $('stats').innerHTML = `Answered: <b>${S.answered}</b> · Correct: <b>${S.correct}</b> (${pct}%)<br>Best streak: <b>${S.best}</b> · Bee rounds: <b>${S.bees}</b> · Best bee score: <b>${S.bestBee}%</b>`;
+  $('stats').innerHTML = [[S.answered, 'Questions answered'], [pct + '%', `Accuracy (${S.correct} correct)`], [S.best, 'Best streak'], [S.bestBee + '%', `Best of ${S.bees} bee round${S.bees === 1 ? '' : 's'}`]]
+    .map(([v, label]) => `<div><b>${v}</b><span>${label}</span></div>`).join('');
   $('stStreak').textContent = '🔥 ' + S.streak; $('stBest').textContent = '🏆 ' + S.best;
   $('stStreak').title = 'Current streak'; $('stBest').title = 'Best streak';
 }
@@ -61,6 +66,7 @@ function start(mode, qs) {
   show('quiz'); ask();
 }
 $('startPractice').onclick = () => start('practice', pool());
+$('startHero').onclick = () => $('startPractice').click();
 $('startBee').onclick = () => start('bee', pool());
 $('startReview').onclick = () => start('review', shuffle(Object.keys(S.missed).filter(id => byId[id]).map(id => byId[id])));
 
