@@ -75,6 +75,11 @@ function ask() {
   $('qNum').textContent = `Question ${R.i + 1} of ${R.qs.length}`;
   $('qScore').textContent = `Score ${R.score}`;
   $('qText').innerHTML = q.text;
+  $('qText').classList.toggle('long', $('qText').textContent.length > 90);
+  $('qText').style.animation = 'none'; $('qText').offsetWidth; $('qText').style.animation = '';
+  $('progress').style.width = 100 * R.i / R.qs.length + '%';
+  $('typeForm').classList.remove('answered'); $('typeIn').readOnly = false;
+  scrollTo(0, 0);
   $('fb').textContent = ''; $('fb').className = 'fb';
   $('next').classList.add('hidden');
   const mc = R.style === 'mc';
@@ -90,7 +95,7 @@ function ask() {
   $('timerBar').classList.toggle('hidden', R.mode !== 'bee');
   if (R.mode === 'bee') {
     const end = Date.now() + 20000;
-    const tick = () => { const left = end - Date.now(); $('timer').style.width = Math.max(0, left / 200) + '%'; if (left <= 0) answer('') };
+    const tick = () => { const left = end - Date.now(); $('timer').style.width = Math.max(0, left / 200) + '%'; $('seconds').textContent = Math.max(0, Math.ceil(left / 1000)) + 's'; $('timerBar').classList.toggle('urgent', left <= 5000); if (left <= 0) answer('') };
     tick(); timerId = setInterval(tick, 200);
   }
 }
@@ -116,6 +121,9 @@ function answer(given, btn) {
   if (ok) { S.correct++; R.score++; S.streak++; S.best = Math.max(S.best, S.streak); delete S.missed[q.id] }
   else { S.streak = 0; S.missed[q.id] = 1; R.miss.push(q) }
   save();
+  $('typeForm').classList.add('answered'); $('typeIn').readOnly = true;
+  $('progress').style.width = 100 * (R.i + 1) / R.qs.length + '%';
+  $('next').textContent = R.i + 1 < R.qs.length ? 'Next question →' : 'See my results →';
   if (btn || R.style === 'mc') $('choices').querySelectorAll('button').forEach(b => {
     if (isRight(q, b.textContent)) b.classList.add('right'); else if (b === btn) b.classList.add('wrong'); b.disabled = true });
   $('fb').className = 'fb ' + (ok ? 'ok' : 'bad');
@@ -132,13 +140,20 @@ $('quit').onclick = () => { clearInterval(timerId); show('home') };
 function finish() {
   if (R.mode === 'bee') { S.bees++; S.bestBee = Math.max(S.bestBee, Math.round(100 * R.score / R.qs.length)); save() }
   const n = R.qs.length, pct = R.score / n;
-  $('doneTitle').textContent = (pct === 1 ? '🏆 Perfect!' : pct >= .7 ? '🌟 Great job!' : '💪 Keep practising!') + ` ${R.score}/${n}`;
+  $('doneTitle').textContent = (pct === 1 ? '🏆 Perfect!' : pct >= .7 ? '🌟 Great job!' : '💪 Keep practising!');
+  $('doneScore').textContent = `${R.score}/${n}`; $('donePct').textContent = `${Math.round(pct * 100)}% correct`;
+  $('ring').style.setProperty('--p', pct * 100);
   $('doneText').textContent = R.miss.length ? 'Questions to review:' : 'No misses this round!';
   $('doneMiss').innerHTML = R.miss.map(q => `<li>${q.plain} — <b>${q.a}</b></li>`).join('');
-  show('done');
+  show('done'); $('doneTitle').focus({ preventScroll: true });
 }
 $('again').onclick = () => show('home');
 
-function show(id) { ['home', 'quiz', 'done'].forEach(s => $(s).classList.toggle('hidden', s !== id)); if (id === 'home') renderHome(); scrollTo(0, 0) }
+function show(id) { ['home', 'quiz', 'done'].forEach(s => $(s).classList.toggle('hidden', s !== id)); document.body.classList.toggle('playing', id !== 'home'); if (id === 'home') renderHome(); scrollTo(0, 0) }
 renderHome();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  // When an update takes over, show it at once, but never in the middle of a round.
+  const updating = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (updating && !document.body.classList.contains('playing')) location.reload() });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+}

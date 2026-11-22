@@ -85,22 +85,65 @@ button.primary{background:var(--brand);border-color:var(--brand);color:var(--on-
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* Quiz */
-.q{font-size:1.25rem;font-weight:600;margin:4px 0 12px}
-.flag{display:block;height:7rem;max-width:100%;margin:.6rem auto 0;border:1px solid #ccc;border-radius:4px}
-li .flag{display:inline;height:1.2em;margin:0 0 0 .3em;vertical-align:middle}
-.typerow{display:flex;gap:.5rem}.typerow input{flex:1;min-width:0}#mic{font-size:1.3rem;padding:0 .8rem;border-radius:8px;border:1px solid #ccc;background:none;cursor:pointer}#mic.on{background:#e53935;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.6}}
-.choices{display:grid;gap:10px}
-.choices button{text-align:left}
-button.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card))}
-button.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--card))}
-input[type=text]{font:inherit;width:100%;padding:12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px}
-.fb{min-height:1.6em;font-weight:600;margin:10px 0}
-.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}
-.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 12px}
-.bar i{display:block;height:100%;background:var(--brand2);transition:width .25s linear}
-.row{display:flex;justify-content:space-between;color:var(--muted);font-size:.95rem}
+/* Quiz and results: always on the night sky */
+body.playing{--card:#18234f;--soft:#222e60;--ink:#fff;--muted:#b4c0e6;--line:#34417a;--ok:#62d99a;--bad:#ff8577;background:radial-gradient(circle at 50% 25%,#26378a 0,var(--night) 65%) fixed var(--night);color:var(--ink);min-height:100vh}
+.playing .night{background:transparent}
+.playing footer{display:none}
+#quiz,#done{max-width:780px;padding:8px 16px 32px}
+.hud{display:flex;align-items:center;gap:12px}
+.hud button{border-radius:99px;background:#ffffff14;border-color:transparent;min-height:44px;padding:6px 16px}
+.hud #qNum{flex:1;text-align:center;color:var(--muted);font-size:.92rem}
+#qScore{background:var(--brand2);color:var(--night);font-weight:800;border-radius:99px;padding:8px 16px;white-space:nowrap}
+.bar{height:8px;border-radius:99px;background:#ffffff1c;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--brand2);border-radius:99px;transition:width .3s}
+.progress{margin:18px 0 12px}
+.clock{display:flex;align-items:center;gap:12px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.clock .bar{flex:1}.clock .bar i{background:#63d2ff;transition:width .2s linear}
+.clock.urgent{color:var(--bad)}.clock.urgent i{background:var(--bad)}
+.q{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:190px;margin-bottom:16px;padding:28px 22px;border-radius:28px;background:#fff;color:var(--night);font:800 clamp(1.3rem,3.6vw,1.9rem)/1.3 ui-rounded,"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;text-align:center;text-wrap:balance;animation:rise .3s ease-out}
+.q.long{font-size:clamp(1.12rem,2.8vw,1.4rem);font-weight:700}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.flag{display:block;height:clamp(110px,22vw,160px);max-width:100%;object-fit:contain;margin:18px auto 0;filter:drop-shadow(0 3px 8px #0b143755)}
+li .flag{display:inline;height:1.3em;margin:0 0 0 .3em;vertical-align:middle}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;counter-reset:choice}
+.choices button{counter-increment:choice;display:flex;align-items:center;gap:12px;min-width:0;min-height:76px;padding:12px;border-radius:20px;text-align:left;font-weight:700;overflow-wrap:anywhere}
+.choices button::before{content:counter(choice,upper-alpha);flex:none;width:38px;height:38px;border-radius:12px;background:#63d2ff;color:var(--night);font:800 1.05rem/38px system-ui;text-align:center}
+.choices button:nth-child(2)::before{background:#62d99a}
+.choices button:nth-child(3)::before{background:#ff9fcb}
+.choices button:nth-child(4)::before{background:var(--brand2)}
+@media (hover:hover){.choices button:not(:disabled):hover{transform:translateY(-3px);border-color:#8793d6}}
+.choices button:disabled{color:var(--muted);cursor:default}
+.choices button.right,.choices button.wrong{color:var(--night)}
+.choices button.right{border-color:var(--ok);background:var(--ok)}
+.choices button.wrong{border-color:var(--bad);background:var(--bad)}
+.choices button.right::before,.choices button.wrong::before{background:var(--night);color:#fff}
+.choices button.right::before{content:"✓"}.choices button.wrong::before{content:"✕"}
+#typeForm label{display:block;margin:0 0 6px 4px;color:var(--muted)}
+.typerow{display:flex;gap:10px;margin-bottom:12px}
+input[type=text]{font:inherit;font-size:1.25rem;font-weight:700;flex:1;min-width:0;width:100%;height:62px;padding:12px 18px;border-radius:20px;border:2px solid var(--line);background:var(--card);color:var(--ink)}
+#mic{width:62px;font-size:1.3rem;border-radius:20px}
+#mic.on{background:#e53935;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.playing button.primary{background:var(--brand2);border-color:var(--brand2);color:var(--night);border-radius:99px;min-height:56px;font-size:1.08rem}
+#typeForm.answered [type=submit],#typeForm.answered #mic{display:none}
+.fb{margin:14px 0 10px;padding:13px 18px;border-radius:18px;font-weight:750;background:var(--soft)}
+.fb:empty{padding:0;margin:0}
+.fb.ok{color:var(--ok);background:#62d99a1f}.fb.bad{color:var(--bad);background:#ff85771f}
+#done{text-align:center;padding-top:20px}
+.ring{--p:0;display:grid;place-items:center;width:190px;height:190px;margin:0 auto 24px;border-radius:50%;background:radial-gradient(var(--night) 0 63%,transparent 64%),conic-gradient(var(--brand2) calc(var(--p)*1%),#ffffff20 0);animation:rise .4s ease-out}
+.ring b{font-size:2.7rem;line-height:1}.ring small{color:var(--muted)}
+#doneTitle{font-size:2.2rem;margin:0 0 8px}
+#doneTitle:focus{outline:0}
+#doneText{color:var(--muted);margin:0 0 18px}
+#doneMiss{list-style:none;padding:0;margin:0 0 22px;display:grid;gap:10px;text-align:left}
+#doneMiss li{margin:0;padding:14px 18px;border-radius:18px;background:var(--card)}
+#doneMiss b{display:block;color:var(--brand2);font-size:1.1rem}
 ul.miss{padding-left:18px}ul.miss li{margin:6px 0}
+@media (max-width:560px){
+  .choices{grid-template-columns:minmax(0,1fr);gap:9px}
+  .choices button{min-height:60px;padding:9px 12px}
+  .q{min-height:140px;padding:20px 16px;border-radius:24px;margin-bottom:12px}
+}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
 footer{text-align:center;font-size:.85rem;color:var(--muted);margin:24px 0}
@@ -171,36 +214,33 @@ footer a{color:var(--brand)}
     </div>
   </section>
 
-  <section id="quiz" class="hidden">
-    <div class="card">
-      <div class="row"><span id="qNum"></span><span id="qScore"></span></div>
-      <div class="bar" id="timerBar"><i id="timer"></i></div>
-      <div class="q" id="qText" aria-live="polite"></div>
-      <div class="choices" id="choices"></div>
-      <form id="typeForm" class="hidden" autocomplete="off">
-        <label for="typeIn" class="muted">Your answer</label>
-        <div class="typerow"><input type="text" id="typeIn" autocapitalize="words" spellcheck="false"><button type="button" id="mic" class="hidden" aria-label="Answer by voice" title="Answer by voice">🎤</button></div>
-        <button class="primary" type="submit">Check</button>
-      </form>
-      <div class="fb" id="fb" role="status"></div>
-      <button class="primary hidden" id="next">Next ➜</button>
-      <p></p><button id="quit">Quit to menu</button>
-    </div>
+  <section id="quiz" class="hidden" aria-label="Quiz">
+    <div class="hud"><button id="quit" aria-label="Quit to menu">✕ Quit</button><span id="qNum"></span><span id="qScore"></span></div>
+    <div class="bar progress" aria-hidden="true"><i id="progress"></i></div>
+    <div class="clock" id="timerBar" role="timer" aria-live="off"><div class="bar"><i id="timer"></i></div><span id="seconds"></span></div>
+    <div class="q" id="qText" aria-live="polite"></div>
+    <div class="choices" id="choices"></div>
+    <form id="typeForm" class="hidden" autocomplete="off">
+      <label for="typeIn">Your answer</label>
+      <div class="typerow"><input type="text" id="typeIn" autocapitalize="words" spellcheck="false"><button type="button" id="mic" class="hidden" aria-label="Answer by voice" title="Answer by voice">🎤</button></div>
+      <button class="primary" type="submit">Check answer</button>
+    </form>
+    <div class="fb" id="fb" role="status"></div>
+    <button class="primary hidden" id="next">Next question →</button>
   </section>
 
-  <section id="done" class="hidden">
-    <div class="card">
-      <h2 id="doneTitle"></h2>
-      <p id="doneText"></p>
-      <ul class="miss" id="doneMiss"></ul>
-      <button class="primary" id="again">Back to menu</button>
-    </div>
+  <section id="done" class="hidden" aria-label="Results">
+    <div class="ring" id="ring"><div><b id="doneScore"></b><br><small id="donePct"></small></div></div>
+    <h2 id="doneTitle" tabindex="-1"></h2>
+    <p id="doneText"></p>
+    <ul id="doneMiss"></ul>
+    <button class="primary" id="again">Back to menu</button>
   </section>
 
   <footer>Free, no ads, no tracking — progress stays on this device. <a href="privacy.html">Privacy</a></footer>
 </main>
 <script src="countries.js"></script>
 <script src="data.js"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
