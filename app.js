@@ -138,6 +138,7 @@ $('next').onclick = () => { if (++R.i < R.qs.length) ask(); else finish() };
 $('quit').onclick = () => { clearInterval(timerId); show('home') };
 
 function finish() {
+  window.LIY?.done();
   if (R.mode === 'bee') { S.bees++; S.bestBee = Math.max(S.bestBee, Math.round(100 * R.score / R.qs.length)); save() }
   const n = R.qs.length, pct = R.score / n;
   $('doneTitle').textContent = (pct === 1 ? '🏆 Perfect!' : pct >= .7 ? '🌟 Great job!' : '💪 Keep practising!');
