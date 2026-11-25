@@ -2,7 +2,7 @@ const $ = id => document.getElementById(id);
 const KEY = 'geobee-v1';
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) } catch {}
-S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', count: 10, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }, S || {});
+S = Object.assign({ cats: Object.keys(BANK), level: 1, style: 'mc', count: 10, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {}, seen: {}, rounds: 0 }, S || {});
 // v2 rebuilt the capitals and flags banks, so old missed ids there point at different questions; new categories start on.
 if (!S.v2) { for (const id in S.missed) if (/^(capitals|flags)/.test(id)) delete S.missed[id]; S.cats = [...new Set([...S.cats, 'waters', 'borders'])]; S.v2 = 1 }
 if (!S.v3) { S.cats = [...new Set([...S.cats, 'africa', 'asia', 'europe', 'oceania', 'latam', 'usca', 'culture', 'terms'])]; S.v3 = 1 }
@@ -18,7 +18,8 @@ const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.r
 const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^(the|mount|mt\.?|lake|river)\s+/, '').replace(/\b(river|ocean|desert|sea|mountains?)\b/g, '').replace(/[^a-z0-9]/g, '');
 // Rough answer type, so multiple-choice options are all countries, all cities, all rivers...
 const COUNTRY_SET = new Set(COUNTRIES.map(c => c[0])), CITY_SET = new Set(COUNTRIES.map(c => c[2]));
-const kind = a => COUNTRY_SET.has(a) ? 'country' : CITY_SET.has(a) ? 'city' : /(Sea|Ocean|Gulf|Bay|Strait|Channel|Canal|Passage)|^Lake /.test(a) ? 'water'
+const STATE_SET = new Set(BANK.states.items.filter(i => i[0][0] !== '@').map(i => i[0]));
+const kind = a => STATE_SET.has(a) ? 'state' : COUNTRY_SET.has(a) ? 'country' : CITY_SET.has(a) ? 'city' : /(Sea|Ocean|Gulf|Bay|Strait|Channel|Canal|Passage)|^Lake /.test(a) ? 'water'
   : /(Island|Peninsula|Reef|Gap|Mountains?)/.test(a) ? 'land' : /\s/.test(a) ? 'multi' : 'word';
 const isRight = (q, s) => [q.a, ...q.alt].some(x => norm(x) === norm(s) && norm(s) !== '');
 
@@ -52,16 +53,19 @@ $('styles').onclick = e => { const b = e.target.closest('button'); if (b) { S.st
 $('showMissed').onclick = () => $('missList').classList.toggle('hidden');
 $('reset').onclick = () => { if (confirm('Reset all scores, streaks and missed questions?')) { const { cats, level, style, count } = S; S = { cats, level, style, count, streak: 0, best: 0, answered: 0, correct: 0, bees: 0, bestBee: 0, missed: {} }; save(); renderHome() } };
 
-// Level N includes questions up to N, favouring level N.
+// Level N includes questions up to N. Questions never asked come first, then the ones asked longest ago,
+// so repeat players work through the whole bank before seeing a question again. Within each group the
+// order is random, and level-N questions are favoured.
 function pool() {
   const qs = ALL.filter(q => S.cats.includes(q.cat) && q.lv <= S.level);
-  return shuffle(qs).sort((a, b) => (b.lv === S.level) - (a.lv === S.level));
+  return shuffle(qs).sort((a, b) => ((S.seen[a.id] || 0) - (S.seen[b.id] || 0)) || ((b.lv === S.level) - (a.lv === S.level)));
 }
 
 // ---- Quiz ----
 let R, timerId;
 function start(mode, qs) {
   if (!qs.length) { alert('No questions here yet.'); return }
+  if (mode !== 'review') S.rounds++;
   R = { mode, qs: shuffle(S.count ? qs.slice(0, S.count) : qs), i: 0, score: 0, miss: [], style: mode === 'bee' ? 'type' : S.style };
   show('quiz'); ask();
 }
@@ -72,6 +76,7 @@ $('startReview').onclick = () => start('review', shuffle(Object.keys(S.missed).f
 
 function ask() {
   const q = R.qs[R.i]; R.done = false;
+  if (R.mode !== 'review') { S.seen[q.id] = S.rounds; save() }
   $('qNum').textContent = `Question ${R.i + 1} of ${R.qs.length}`;
   $('qScore').textContent = `Score ${R.score}`;
   $('qText').innerHTML = q.text;

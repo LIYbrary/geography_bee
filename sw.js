@@ -1,6 +1,6 @@
 // Our own files: network first, so updates show at once; saved copy when offline or slow.
 // Flag images: saved copy first, as they never change.
-const CACHE='geography-bee-v11';
+const CACHE='geography-bee-v12';
 const FILES=['./','index.html','manifest.webmanifest','privacy.html','app.js?v=8','support.js','countries.js','data.js','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png'];
 const FLAGS='https://flagcdn.com';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES.map(f=>new Request(f,{cache:'reload'})))));self.skipWaiting()});
