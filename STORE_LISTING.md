@@ -12,14 +12,14 @@ Geography Bee Practice Quiz
 
 ## Short description (74/80)
 ```
-Practise for your geography bee: capitals, flags, states, rivers, borders.
+Practice for your geography bee: capitals, flags, states, rivers, borders.
 ```
 
 ## Full description (1086/4000)
 ```
 Geography Bee Practice helps students get ready for a school or regional geography bee. It's free, with no ads and no accounts.
 
-Practise with questions across 16 topics:
+Practice with questions across 16 topics:
 • Capitals and flags of every country
 • US state capitals, and US & Canada facts
 • Continents, oceans, rivers, mountains and deserts
